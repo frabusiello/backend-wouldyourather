@@ -1,0 +1,4 @@
+{
+    "watch": ["index.js", "server/**/*.ts", "server/**/*.js"],
+    "ignore": ["node_modules"]
+}
