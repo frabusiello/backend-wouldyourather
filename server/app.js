@@ -1,24 +1,27 @@
 import { ApolloServer, gql } from "apollo-server";
-import { getBooks, getRoom } from "./data";
+import {
+    getBooks,
+    getRoomByCode,
+    createRoom,
+    getPlayerFromUuid,
+    createPlayerAndAddToRoom,
+    getRoomFromUuid
+} from "./data";
 import { schema } from "./schema/schema";
 const resolvers = {
     Query: {
         books: () => getBooks(),
-        currentRoom: (parent, { roomCode }) => {
-            console.log("asdasd", parent, "args,", roomCode);
-            return getRoom(roomCode);
+        currentRoom: (parent, { roomCode }) => getRoomByCode(roomCode),
+        player: (parent, { id }) => getPlayerFromUuid(id)
+    },
+    Mutation: {
+        createRoom,
+        createPlayerAndAddToRoom: (parent, { playerName, roomCode }) => {
+            return createPlayerAndAddToRoom(playerName, roomCode);
         }
-        // currentRoom: (parent, args) => {
-        //     console.log("args", args);
-        //     return {
-        //         roomCode: args.roomCode || "abcd",
-        //         players: []
-        //     };
-        // }
-        // currentRoom: () => {
-        //     return { roomCode: "aaaa", players: [] };
-        // }
-    }
+    },
+    Player: (parent, { id }) => getPlayerFromUuid(id),
+    Room: (parent, { id }) => getRoomFromUuid(id)
 };
 const server = new ApolloServer({ typeDefs: schema, resolvers, tracing: true });
 

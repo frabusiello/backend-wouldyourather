@@ -15,11 +15,13 @@
         "@babel/register": "^7.8.3",
         "@babel/runtime": "^7.8.4",
         "@types/mongodb": "^3.3.16",
+        "@types/uuid": "^3.4.7",
         "apollo-server": "^2.10.1",
         "babel-node": "^0.0.1-security",
         "graphql": "^14.6.0",
         "mongodb": "^3.5.3",
         "nodemon": "^2.0.2",
+        "randomstring": "^1.1.5",
         "typescript": "^3.7.5",
         "uuid": "^3.4.0"
     },
