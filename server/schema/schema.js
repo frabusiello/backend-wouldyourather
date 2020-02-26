@@ -17,7 +17,6 @@ export const schema = gql`
         name: String
         id: ID!
     }
-
     type Query {
         books: [Book]
         currentRoom(roomCode: String): Room

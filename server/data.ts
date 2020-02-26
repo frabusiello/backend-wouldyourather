@@ -2,7 +2,6 @@ import connection from "./mongo";
 import uuidv4 from "uuid/v4";
 import { Db } from "mongodb";
 import { Room, Player } from "./classes";
-import { generateRoomCode } from "./utils/roomCodes";
 export async function getBooks() {
     const client = await connection();
     return await client
