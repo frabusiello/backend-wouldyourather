@@ -2,6 +2,7 @@ import connection from "./mongo";
 import uuidv4 from "uuid/v4";
 import { Db } from "mongodb";
 import { Room, Player } from "./classes";
+import { generateRoomCode } from "./utils/roomCodes";
 export async function getBooks() {
     const client = await connection();
     return await client
@@ -11,6 +12,7 @@ export async function getBooks() {
 }
 
 export async function getRoomByCode(roomCode: string) {
+    console.log("roomCode braaaah", roomCode);
     if (roomCode.length === 0) {
         return {};
     }
@@ -79,7 +81,8 @@ export async function createRoom() {
     const mongoRes = await client.collection("rooms").insertOne({
         roomCode: generateRoomCode(),
         uuid,
-        gameStatus: "waiting"
+        gameStatus: "waiting",
+        players: []
     });
     // console.log("room", room);
     if (mongoRes && mongoRes.result && mongoRes.result.ok === 1) {
@@ -101,7 +104,7 @@ export async function addPlayerToRoom(playerId: string, roomCode: string) {
         .collection("rooms")
         .updateOne({ uuid: room.id }, { $push: { players: playerId } });
     if (mongoRes && mongoRes.result && mongoRes.result.ok === 1) {
-        return await getRoomFromUuid(room.id);
+        return await getRoomByCode(roomCode);
     } else {
         throw new Error("Couldn't create room");
     }
@@ -113,5 +116,6 @@ export async function createPlayerAndAddToRoom(
 ) {
     const player = await createPlayer(playerName);
     const room = await addPlayerToRoom(player.id, roomCode);
+
     return room;
 }

@@ -1,11 +1,6 @@
 import { gql } from "apollo-server";
 
 export const schema = gql`
-    type Book {
-        title: String
-        author: String
-    }
-
     type Room {
         gameStatus: String
         roomCode: String
@@ -18,7 +13,6 @@ export const schema = gql`
         id: ID!
     }
     type Query {
-        books: [Book]
         currentRoom(roomCode: String): Room
         player(id: String): Player
     }
@@ -26,5 +20,8 @@ export const schema = gql`
     type Mutation {
         createRoom: Room
         createPlayerAndAddToRoom(playerName: String, roomCode: String): Room
+    }
+    type Subscription {
+        playerJoined(roomCode: String): Room
     }
 `;

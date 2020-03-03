@@ -1,3 +1,5 @@
+const { PubSub } = require("apollo-server");
+
 import {
     getBooks,
     getRoomByCode,
@@ -7,19 +9,34 @@ import {
     getRoomFromUuid
 } from "./data";
 
+const pubsub = new PubSub();
+
 export const resolvers = {
+    Subscription: {
+        playerJoined: {
+            subscribe: args => {
+                console.log("trying to sub", args);
+                return pubsub.asyncIterator(["PLAYER_JOINED"]);
+            },
+            resolve: ({ roomCode }) => {
+                console.log("resolving brah", roomCode);
+                return getRoomByCode(roomCode);
+            }
+        }
+    },
     Query: {
-        books: () => getBooks(),
         currentRoom: (parent, { roomCode }) => getRoomByCode(roomCode),
         player: (parent, { id }) => {
-            console.log("adadasd", parent, id);
             return getPlayerFromUuid(id);
         }
     },
     Mutation: {
         createRoom,
-        createPlayerAndAddToRoom: (parent, { playerName, roomCode }) => {
-            return createPlayerAndAddToRoom(playerName, roomCode);
+        createPlayerAndAddToRoom: async (parent, { playerName, roomCode }) => {
+            const room = await createPlayerAndAddToRoom(playerName, roomCode);
+            pubsub.publish("PLAYER_JOINED", { roomCode });
+
+            return room;
         }
     },
     Player: (parent, args) => {
