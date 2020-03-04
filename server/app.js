@@ -6,12 +6,12 @@ import { resolvers } from "./resolvers";
 const server = new ApolloServer({
     subscriptions: {
         onConnect: (connectionParams, webSocket, context) => {
-            console.log("we have subscribed", context);
+            // console.log("we have subscribed", context);
             // ...
         },
         onDisconnect: (webSocket, context) => {
             // ...
-            console.log("we stopped being subscribed", context);
+            // console.log("we stopped being subscribed", context);
         }
     },
     typeDefs: schema,

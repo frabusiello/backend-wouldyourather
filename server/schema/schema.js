@@ -19,9 +19,9 @@ export const schema = gql`
 
     type Mutation {
         createRoom: Room
-        createPlayerAndAddToRoom(playerName: String, roomCode: String): Room
+        createPlayerAndAddToRoom(playerName: String, roomCode: String): Player
     }
     type Subscription {
-        playerJoined(roomCode: String): Room
+        playerJoined(roomCode: String): Player
     }
 `;

@@ -15,7 +15,7 @@ export class Room {
         const { roomCode, players, uuid, gameStatus } = room;
         return {
             roomCode,
-            players,
+            players: players != null ? players : [],
             id: uuid,
             gameStatus
         };

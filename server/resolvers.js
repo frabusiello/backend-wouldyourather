@@ -1,4 +1,4 @@
-const { PubSub } = require("apollo-server");
+const { PubSub, withFilter } = require("apollo-server");
 
 import {
     getBooks,
@@ -14,13 +14,19 @@ const pubsub = new PubSub();
 export const resolvers = {
     Subscription: {
         playerJoined: {
-            subscribe: args => {
-                console.log("trying to sub", args);
-                return pubsub.asyncIterator(["PLAYER_JOINED"]);
-            },
-            resolve: ({ roomCode }) => {
-                console.log("resolving brah", roomCode);
-                return getRoomByCode(roomCode);
+            subscribe: withFilter(
+                () => pubsub.asyncIterator("PLAYER_JOINED"),
+                (payload, variables) => {
+                    return payload.roomCode === variables.roomCode;
+                }
+            ),
+            // subscribe: args => {
+            //     console.log("trying to sub", args);
+            //     return pubsub.asyncIterator(["PLAYER_JOINED"]);
+            // },
+            resolve: ({ player }) => {
+                console.log("resolved player", player);
+                return player;
             }
         }
     },
@@ -33,10 +39,12 @@ export const resolvers = {
     Mutation: {
         createRoom,
         createPlayerAndAddToRoom: async (parent, { playerName, roomCode }) => {
-            const room = await createPlayerAndAddToRoom(playerName, roomCode);
-            pubsub.publish("PLAYER_JOINED", { roomCode });
+            const player = await createPlayerAndAddToRoom(playerName, roomCode);
+            console.log("player mutation", player);
 
-            return room;
+            pubsub.publish("PLAYER_JOINED", { roomCode, player });
+
+            return player;
         }
     },
     Player: (parent, args) => {
@@ -45,14 +53,13 @@ export const resolvers = {
     },
     Room: {
         players: parent => {
-            console.log("parent", parent);
             if (parent.players.length > 0) {
                 const playerPromises = parent.players.map(p =>
                     getPlayerFromUuid(p)
                 );
-                console.log(playerPromises);
                 return Promise.all(playerPromises);
             }
+            return [];
         }
     }
 };
