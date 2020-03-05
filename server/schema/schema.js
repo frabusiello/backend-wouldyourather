@@ -61,5 +61,6 @@ export const schema = gql`
     }
     type Subscription {
         playerJoined(roomCode: String): Player
+        gameStatus(roomCode: String): Room
     }
 `;

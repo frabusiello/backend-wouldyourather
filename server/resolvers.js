@@ -25,13 +25,24 @@ export const resolvers = {
                     return payload.roomCode === variables.roomCode;
                 }
             ),
-            // subscribe: args => {
-            //     console.log("trying to sub", args);
-            //     return pubsub.asyncIterator(["PLAYER_JOINED"]);
-            // },
+
             resolve: ({ player }) => {
                 console.log("resolved player", player);
                 return player;
+            }
+        },
+        gameStatus: {
+            subscribe: withFilter(
+                () => pubsub.asyncIterator("GAME_STATUS_CHANGED"),
+                (payload, variables) => {
+                    console.log("asdasdasdasdad", payload, variables);
+                    return payload.roomCode === variables.roomCode;
+                }
+            ),
+
+            resolve: ({ room }) => {
+                console.log("resolved room", room);
+                return room;
             }
         }
     },
@@ -67,7 +78,7 @@ export const resolvers = {
         },
         startGame: async (parent, { roomCode }) => {
             const room = await startGame(roomCode);
-            pubsub.publish("GAME_STARTED", { roomCode });
+            pubsub.publish("GAME_STATUS_CHANGED", { roomCode, room });
 
             return room;
         },
