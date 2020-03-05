@@ -165,6 +165,13 @@ export async function answerQuestion(
     playerId: string
 ) {
     const client = await connection();
+    const question = await getQuestionByUuid(questionId);
+    if (question.asker === playerId) {
+        throw new Error("asker can't answer the question");
+    }
+    if (question.answers.filter(q => q.playerId === playerId).length > 0) {
+        throw new Error("Player has already answered the question");
+    }
     const questionRes = await client
         .collection("questions")
         .updateOne(

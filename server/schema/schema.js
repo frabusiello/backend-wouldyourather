@@ -8,6 +8,11 @@ export const schema = gql`
         id: ID!
         currentQuestion: Question
         questions: [Question]
+        scores: [Score]
+    }
+    type Score {
+        player: Player
+        score: Int
     }
 
     type Player {

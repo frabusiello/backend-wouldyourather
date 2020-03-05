@@ -73,6 +73,9 @@ export const resolvers = {
         },
         answerQuestion: async (parent, { questionId, choice, playerId }) => {
             const question = await answerQuestion(questionId, choice, playerId);
+            // if (question.answers.length === parent.players.length - 1) {
+            //     console.lof("we have parity", question.answers, parent.players);
+            // }
             pubsub.publish("QUESTION_ANSWERED", { questionId });
             return question;
         }
@@ -86,6 +89,19 @@ export const resolvers = {
         },
         responder: parent => {
             return getPlayerFromUuid(parent.responder);
+        },
+        correct: parent => {
+            const responderAnswer = parent.answers.filter(
+                a => a.playerId === parent.responder
+            );
+            return responderAnswer?.[0]?.choice;
+        },
+        answers: async function(parent) {
+            const answers = await parent.answers.map(({ playerId, choice }) => {
+                const player = getPlayerFromUuid(playerId);
+                return { player, answer: choice };
+            });
+            return answers;
         }
     },
     Room: {
@@ -105,6 +121,11 @@ export const resolvers = {
                 return getAllQuestions(parent.questions);
             }
             return [];
+        },
+        scores: parent => {
+            parent.questions.forEach(q => {
+                console.log("q", q);
+            });
         }
     }
 };
