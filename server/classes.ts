@@ -4,20 +4,38 @@ type dbRoom = {
     players: [Player];
     uuid: string;
     gameStatus: string;
+    questions: [string];
 };
 type dbPlayer = {
     name: string;
     uuid: string;
 };
+type dbQuestion = {
+    uuid: string;
+    asker: string;
+    responder: string;
+    choices: {
+        a: string;
+        b: string;
+    };
+    answers: [
+        {
+            playerId: string;
+            choice: string;
+        }
+    ];
+    correct: string;
+};
 
 export class Room {
     constructor(room: dbRoom) {
-        const { roomCode, players, uuid, gameStatus } = room;
+        const { roomCode, players, uuid, gameStatus, questions } = room;
         return {
             roomCode,
             players: players != null ? players : [],
             id: uuid,
-            gameStatus
+            gameStatus,
+            questions: questions != null ? questions : []
         };
     }
 }
@@ -29,5 +47,11 @@ export class Player {
             name,
             id: uuid
         };
+    }
+}
+
+export class Question {
+    constructor(question: dbQuestion) {
+        return { id: question.uuid, ...question };
     }
 }

@@ -6,7 +6,12 @@ import {
     createRoom,
     getPlayerFromUuid,
     createPlayerAndAddToRoom,
-    getRoomFromUuid
+    getRoomFromUuid,
+    createQuestion,
+    getAllPlayers,
+    getAllQuestions,
+    startGame,
+    answerQuestion
 } from "./data";
 
 const pubsub = new PubSub();
@@ -40,24 +45,64 @@ export const resolvers = {
         createRoom,
         createPlayerAndAddToRoom: async (parent, { playerName, roomCode }) => {
             const player = await createPlayerAndAddToRoom(playerName, roomCode);
-            console.log("player mutation", player);
 
             pubsub.publish("PLAYER_JOINED", { roomCode, player });
 
             return player;
+        },
+        askQuestion: async (
+            parent,
+            { asker, responder, choices, roomCode }
+        ) => {
+            const question = await createQuestion(
+                asker,
+                responder,
+                choices,
+                roomCode
+            );
+
+            pubsub.publish("QUESTION_ASKED", { roomCode });
+
+            return question;
+        },
+        startGame: async (parent, { roomCode }) => {
+            const room = await startGame(roomCode);
+            pubsub.publish("GAME_STARTED", { roomCode });
+
+            return room;
+        },
+        answerQuestion: async (parent, { questionId, choice, playerId }) => {
+            const question = await answerQuestion(questionId, choice, playerId);
+            pubsub.publish("QUESTION_ANSWERED", { questionId });
+            return question;
         }
     },
     Player: (parent, args) => {
-        console.log("getting player", parent, args);
         return getPlayerFromUuid(args.id);
+    },
+    Question: {
+        asker: parent => {
+            return getPlayerFromUuid(parent.asker);
+        },
+        responder: parent => {
+            return getPlayerFromUuid(parent.responder);
+        }
     },
     Room: {
         players: parent => {
             if (parent.players.length > 0) {
-                const playerPromises = parent.players.map(p =>
-                    getPlayerFromUuid(p)
-                );
-                return Promise.all(playerPromises);
+                return getAllPlayers(parent.players);
+            }
+            return [];
+        },
+        currentQuestion: parent => {
+            if (parent.questions.length === 0) {
+                return {};
+            }
+        },
+        questions: parent => {
+            if (parent.questions.length > 0) {
+                return getAllQuestions(parent.questions);
             }
             return [];
         }

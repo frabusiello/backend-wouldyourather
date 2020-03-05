@@ -1,7 +1,7 @@
 import connection from "./mongo";
 import uuidv4 from "uuid/v4";
 import { Db } from "mongodb";
-import { Room, Player } from "./classes";
+import { Room, Player, Question } from "./classes";
 import { generateRoomCode } from "./utils/roomCodes";
 export async function getBooks() {
     const client = await connection();
@@ -105,4 +105,106 @@ export async function createPlayerAndAddToRoom(
     const player = await createPlayer(playerName);
     const room = await addPlayerToRoom(player.id, roomCode);
     return player;
+}
+
+type choices = {
+    a: string;
+    b: string;
+};
+export async function createQuestion(
+    asker: string,
+    responder: string,
+    choices: choices,
+    roomCode: string
+) {
+    const client = await connection();
+
+    const question = {
+        asker,
+        responder,
+        choices,
+        roomCode,
+        answers: [],
+        uuid: uuidv4(),
+        timestamp: Date.now()
+    };
+    const insertQuestionResponse = await client
+        .collection("questions")
+        .insertOne(question);
+    if (insertQuestionResponse?.result?.ok === 1) {
+        const updateRoomResponse = await insertQuestionInRoom(
+            roomCode,
+            question.uuid
+        );
+        if (updateRoomResponse?.result?.ok === 1) {
+            const updateRoomResponse = await insertQuestionInRoom(
+                roomCode,
+                question.uuid
+            );
+        } else {
+            throw new Error("Couldn't create room");
+        }
+    } else {
+        throw new Error("Couldn't create room");
+    }
+}
+
+export async function insertQuestionInRoom(
+    roomCode: string,
+    questionId: string
+) {
+    const client = await connection();
+    return await client
+        .collection("rooms")
+        .updateOne({ roomCode }, { $push: { questions: questionId } });
+}
+
+export async function answerQuestion(
+    questionId: string,
+    choice: string,
+    playerId: string
+) {
+    const client = await connection();
+    const questionRes = await client
+        .collection("questions")
+        .updateOne(
+            { uuid: questionId },
+            { $push: { answers: { playerId, choice } } }
+        );
+    //TODO check if player has already answered the question
+    return getQuestionByUuid(questionId);
+}
+
+export async function getQuestionByUuid(questionId: string) {
+    const client = await connection();
+    const questionArray = await client
+        .collection("questions")
+        .find({ uuid: questionId })
+        .toArray();
+    return new Question(questionArray[0]);
+}
+
+export async function getAllPlayers(playerIds: Array<string>) {
+    const client = await connection();
+    const players = await client
+        .collection("players")
+        .find({ uuid: { $in: playerIds } })
+        .toArray();
+    return players.map(p => new Player(p));
+}
+export async function getAllQuestions(questionIds: Array<string>) {
+    const client = await connection();
+    const questions = await client
+        .collection("questions")
+        .find({ uuid: { $in: questionIds } })
+        .toArray();
+    return questions.map(q => new Question(q));
+}
+
+export async function startGame(roomCode: string) {
+    const client = await connection();
+    await client
+        .collection("rooms")
+        .updateOne({ roomCode }, { $set: { gameStatus: "in progress" } });
+    return getRoomByCode(roomCode);
 }
